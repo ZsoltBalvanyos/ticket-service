@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:14.3-alpine3.15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: core
+    ports:
+      - "5432:5432"
+
+  api:
+    image: otp-mobil-api
+    container_name: api
+    ports:
+      - "9991:9991"
+
+  core:
+    image: otp-mobil-core
+    container_name: core
+    ports:
+      - "9992:9992"
+
+  ticket:
+    image: otp-mobil-ticket
+    container_name: ticket
+    ports:
+      - "9993:9993"
+
+  partner:
+    image: otp-mobil-partner
+    container_name: partner
+    ports:
+      - "9994:9994"
