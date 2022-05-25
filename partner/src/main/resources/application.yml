@@ -1,2 +1,17 @@
 server:
   port : 9994
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/partner
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  sql:
+    init:
+      mode: always
