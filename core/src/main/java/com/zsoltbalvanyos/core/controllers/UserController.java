@@ -1,4 +1,4 @@
-package com.zsoltbalvanyos.core;
+package com.zsoltbalvanyos.core.controllers;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
