@@ -19,29 +19,69 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: partner
+    command: -p 5433
     ports:
-      - "5433:5432"
+      - "5433:5433"
+
+  postgres-ticket:
+    image: postgres:14.3-alpine3.15
+    container_name: postgres-ticket
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ticket
+    command: -p 5434
+    ports:
+      - "5434:5434"
 
   api:
     image: otp-mobil-api
     container_name: api
+    environment:
+      CORE_HOST: core
+      TICKET_HOST: ticket
     ports:
       - "9991:9991"
+    depends_on:
+      - core
+      - ticket
 
   core:
     image: otp-mobil-core
     container_name: core
+    environment:
+      POSTGRES_HOST: postgres-core
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "9992:9992"
+    depends_on:
+      - postgres-core
 
   ticket:
     image: otp-mobil-ticket
     container_name: ticket
+    environment:
+      CORE_HOST: core
+      PARTNER_HOST: partner
+      POSTGRES_HOST: postgres-ticket
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "9993:9993"
+    depends_on:
+      - postgres-ticket
+      - core
+      - partner
 
   partner:
     image: otp-mobil-partner
     container_name: partner
+    environment:
+      POSTGRES_HOST: postgres-partner
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "9994:9994"
+    depends_on:
+      - postgres-partner

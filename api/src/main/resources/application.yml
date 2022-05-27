@@ -1,2 +1,8 @@
 server:
   port : 9991
+
+core:
+  endpoint: "http://${CORE_HOST:localhost}:9992"
+
+ticket:
+  endpoint: "http://${TICKET_HOST:localhost}:9993"

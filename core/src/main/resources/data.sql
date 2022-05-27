@@ -1,4 +1,4 @@
-INSERT INTO CUSTOMER (USER_ID, NAME, EMAIL) VALUES
+INSERT INTO USERS (USER_ID, NAME, EMAIL) VALUES
 (1000, 'Teszt Aladár', 'teszt.aladar@otpmobil.com'),
 (2000, 'Teszt Benedek', 'teszt.benedek@otpmobil.com'),
 (3000, 'Teszt Cecília', 'teszt.cecilia@otpmobil.com');
