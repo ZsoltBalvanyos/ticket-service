@@ -9,12 +9,13 @@ import com.zsoltbalvanyos.core.repositories.PartnerRepository;
 import com.zsoltbalvanyos.core.repositories.ReservedAmountRepository;
 import com.zsoltbalvanyos.core.repositories.UserBankCardRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class PaymentService {
 
@@ -23,29 +24,31 @@ public class PaymentService {
     private final ReservedAmountRepository reservedAmountRepository;
 
     @Transactional
-    public void reserve(String transactionId, long cardId, BigDecimal amount) {
+    public void reserve(long transactionId, long cardId, BigDecimal amount) {
 
         if (reservedAmountRepository.existsById(transactionId)) {
             throw new DuplicatedReservationException();
         }
 
+        var prefixedCardId = prefixCardId(cardId);
+
         reservedAmountRepository.save(
             ReservedAmount.builder()
                 .transactionId(transactionId)
-                .cardId(cardId)
+                .cardId(prefixedCardId)
                 .amount(amount)
                 .build()
         );
 
         var userBankCard = userBankCardRepository
-            .findAndLockByCardId(prefixCardId(cardId))
+            .findAndLockByCardId(prefixedCardId)
             .orElseThrow(CardNotFoundException::new);
 
         userBankCard.setAmount(userBankCard.getAmount().subtract(amount));
     }
 
     @Transactional
-    public void complete(String transactionId, long partnerId) {
+    public void complete(long transactionId, long partnerId) {
         var reservedAmount = reservedAmountRepository
             .findAndLockByTransactionId(transactionId)
             .orElseThrow(TransactionNotReservedException::new);
@@ -60,7 +63,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public void revert(String transactionId, long cardId) {
+    public void revert(long transactionId, long cardId) {
         var reservedAmount = reservedAmountRepository
             .findAndLockByTransactionId(transactionId)
             .orElseThrow(TransactionNotReservedException::new);

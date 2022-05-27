@@ -2,6 +2,7 @@ package com.zsoltbalvanyos.core.controllers;
 
 import com.zsoltbalvanyos.core.services.PaymentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.NumberFormat;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,7 +19,7 @@ public class PaymentController {
 
     @PostMapping("/reserve")
     public void reserve(
-        @RequestParam("transactionId") String transactionId,
+        @RequestParam("transactionId") long transactionId,
         @RequestParam("cardId") long cardId,
         @RequestParam("amount") BigDecimal amount
     ) {
@@ -27,7 +28,7 @@ public class PaymentController {
 
     @PostMapping("/complete")
     public void complete(
-        @RequestParam("transactionId") String transactionId,
+        @RequestParam("transactionId") long transactionId,
         @RequestParam("partnerId") long partnerId
     ) {
         paymentService.complete(transactionId, partnerId);
@@ -35,7 +36,7 @@ public class PaymentController {
 
     @PostMapping("/revert")
     public void revert(
-        @RequestParam("transactionId") String transactionId,
+        @RequestParam("transactionId") long transactionId,
         @RequestParam("cardId") long cardId
     ) {
         paymentService.revert(transactionId, cardId);

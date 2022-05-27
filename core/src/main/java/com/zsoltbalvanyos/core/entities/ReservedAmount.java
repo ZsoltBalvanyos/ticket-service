@@ -19,9 +19,8 @@ import java.time.Instant;
 public class ReservedAmount {
 
     @Id
-    private String transactionId;
+    private long transactionId;
 
-    private long cardId;
+    private String cardId;
     private BigDecimal amount;
-    private Instant reservedAt;
 }

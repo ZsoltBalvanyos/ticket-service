@@ -3,12 +3,13 @@ package com.zsoltbalvanyos.partner.services;
 import com.zsoltbalvanyos.partner.dtos.EventSeat;
 import com.zsoltbalvanyos.partner.dtos.EventSummary;
 import com.zsoltbalvanyos.partner.dtos.EventDetails;
-import com.zsoltbalvanyos.partner.exceptions.EventUnavailableException;
+import com.zsoltbalvanyos.partner.exceptions.EventNotFoundException;
 import com.zsoltbalvanyos.partner.exceptions.SeatReservedException;
-import com.zsoltbalvanyos.partner.exceptions.SeatUnavailableException;
+import com.zsoltbalvanyos.partner.exceptions.SeatNotFoundException;
 import com.zsoltbalvanyos.partner.repositories.EventRepository;
 import com.zsoltbalvanyos.partner.repositories.SeatRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -16,7 +17,7 @@ import javax.transaction.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class EventService {
 
@@ -27,7 +28,7 @@ public class EventService {
     public long reserve(long eventId, long seatId) {
         var reservation = seatRepository
             .findByEventIdAndSeatId(eventId, seatId)
-            .orElseThrow(SeatUnavailableException::new);
+            .orElseThrow(SeatNotFoundException::new);
 
         if (reservation.isReserved()) {
             throw new SeatReservedException();
@@ -54,7 +55,7 @@ public class EventService {
             .map(s -> new EventSeat(s.getSeatId(), s.getPrice(), s.getCurrency(), s.isReserved()))
             .toList();
 
-        if (seats.isEmpty()) throw new EventUnavailableException();
+        if (seats.isEmpty()) throw new EventNotFoundException();
 
         return new EventDetails(eventId, seats);
     }

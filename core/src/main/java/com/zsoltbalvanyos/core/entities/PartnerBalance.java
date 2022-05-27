@@ -15,12 +15,11 @@ import java.math.BigDecimal;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Partner {
+public class PartnerBalance {
 
     @Id
     @GeneratedValue
     private long partnerId;
 
-    String name;
     BigDecimal amount;
 }

@@ -7,8 +7,8 @@ import org.springframework.data.repository.CrudRepository;
 import javax.persistence.LockModeType;
 import java.util.Optional;
 
-public interface ReservedAmountRepository extends CrudRepository<ReservedAmount, String> {
+public interface ReservedAmountRepository extends CrudRepository<ReservedAmount, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<ReservedAmount> findAndLockByTransactionId(String transactionId);
+    Optional<ReservedAmount> findAndLockByTransactionId(long transactionId);
 }
