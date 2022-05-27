@@ -1,0 +1,13 @@
+package com.zsoltbalvanyos.ticket.entities;
+
+public enum BookingState {
+    STARTED,
+    AMOUNT_RESERVED,
+    AMOUNT_RESERVATION_FAILED,
+    SEAT_BOOKED,
+    SEAT_BOOKING_FAILED,
+    PAYMENT_COMPLETED,
+    PAYMENT_COMPLETION_FAILED,
+    PAYMENT_REVERTED,
+    REVERT_PAYMENT_FAILED
+}
