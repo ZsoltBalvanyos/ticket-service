@@ -53,3 +53,5 @@ Buy a ticket for a seat of a promoted event.
 1. filters to `/getEvent` and `/getEvents` endpoints
 2. pagination for `/getEvents`
 3. sending requests in parallel when loading events from partners 
+4. generate trace-token in Api and use for MDC logging
+5. configure retries
