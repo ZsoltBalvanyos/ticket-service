@@ -22,6 +22,13 @@ public class EventService {
     private final EventRepository eventRepository;
     private final SeatRepository seatRepository;
 
+    /**
+     * Reserves a seat of the specified event.
+     *
+     * @param eventId the id of the event
+     * @param seatId the id of the seat
+     * @return the reservation id
+     */
     @Transactional
     public long reserve(long eventId, long seatId) {
         var reservation = seatRepository
@@ -36,6 +43,11 @@ public class EventService {
         return reservation.getReservationId();
     }
 
+    /**
+     * Returns all events
+     *
+     * @return all events
+     */
     public List<EventSummary> getEvents() {
         return eventRepository.findAll().stream().map(event -> new EventSummary(
             event.getEventId(),
@@ -46,6 +58,12 @@ public class EventService {
         )).collect(Collectors.toList());
     }
 
+    /**
+     * Returns details of a specific event.
+     *
+     * @param eventId the id of the event.
+     * @return the details of the event
+     */
     public EventDetails getEvent(@RequestParam("eventId") long eventId) {
         var seats = seatRepository
             .findByEventId(eventId)

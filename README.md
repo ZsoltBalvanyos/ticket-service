@@ -48,3 +48,8 @@ Get the seating details of a specific event.
 #### /pay
 Buy a ticket for a seat of a promoted event.
 ![pay sequence diagram](docs/pay-seq.png "pay sequence diagram")
+
+## Potential improvements
+1. filters to `/getEvent` and `/getEvents` endpoints
+2. pagination for `/getEvents`
+3. sending requests in parallel when loading events from partners 

@@ -19,6 +19,13 @@ public class UserController {
 
     private final UserValidationService userValidationService;
 
+    /**
+     * Validates the user token expected in the header of each request.
+     * If the request is for a payment operation, the card id is also validated.
+     *
+     * @param token the user token
+     * @param cardId the card id of the user
+     */
     @GetMapping("/validate")
     public void validate(
         @RequestHeader("User-Token") Optional<String> token,

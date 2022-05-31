@@ -22,11 +22,22 @@ public class TicketController {
 
     private final TicketService ticketService;
 
+    /**
+     * Returns all events
+     *
+     * @return all events
+     */
     @GetMapping("/getEvents")
     public ResponseWrapper<List<EventSummary>> getEvents() {
         return new ResponseWrapper<>(ticketService.getEvents(), true);
     }
 
+    /**
+     * Returns details of a specific event.
+     *
+     * @param eventId the id of the event.
+     * @return the details of the event
+     */
     @GetMapping("/getEvent")
     public ResponseWrapper<EventDetails> getEvents(@RequestParam("eventId") long eventId) {
         var eventDetails = ticketService.getEvent(eventId)
@@ -34,6 +45,15 @@ public class TicketController {
         return new ResponseWrapper<>(eventDetails, true);
     }
 
+    /**
+     * Processes the purchase of a ticket.
+     *
+     * @param eventId the id of the event
+     * @param seatId the id of the seat
+     * @param cardId the id of the card
+     * @param token the user token
+     * @return the reservation id
+     */
     @PostMapping("/pay")
     public ResponseWrapper<Long> pay(
         @RequestParam("eventId") long eventId,

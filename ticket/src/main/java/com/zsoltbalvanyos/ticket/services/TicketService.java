@@ -27,6 +27,16 @@ public class TicketService {
     private final Map<String, PartnerClient> partnerClients;
 
     // TODO: 27/05/2022 these could be parallel
+
+    /**
+     * Loads all events of all the partners.
+     *
+     * If a partner configured in the database but a client component to
+     * access its api has not been find, an error is logged but the
+     * process continues.
+     *
+     * @return all events
+     */
     public List<EventSummary> getEvents() {
         return partnerRepository.getPartnersWithActiveEvent()
             .stream()
@@ -40,6 +50,12 @@ public class TicketService {
             .collect(Collectors.toList());
     }
 
+    /**
+     * Returns details of a specific event.
+     *
+     * @param eventId the id of the event.
+     * @return the details of the event
+     */
     public Optional<EventDetails> getEvent(long eventId) {
         return Optional.ofNullable(
                 partnerClients.get(
@@ -51,6 +67,19 @@ public class TicketService {
             .getEvent(eventId);
     }
 
+    /**
+     * Processes the purchase of a ticket.
+     *
+     * 1. loads the event details from the partner
+     * 2. runs validation related to the ticket
+     * 3. calls the payment service to make the transaction
+     *
+     * @param eventId the id of the event
+     * @param seatId the id of the seat
+     * @param cardId the id of the card
+     * @param userId the id of the user
+     * @return the reservation id
+     */
     public long buyTicket(long eventId, long seatId, long userId, long cardId) {
 
         var partner = partnerRepository

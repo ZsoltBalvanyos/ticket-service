@@ -26,6 +26,13 @@ public class ApiController {
         this.ticketEndpoint = ticketEndpoint;
     }
 
+    /**
+     * Proxy GET requests to the ticket service.
+     *
+     * @param request the request to be sent
+     * @param proxy the proxy component injected by spring
+     * @return response from the ticket service
+     */
     @GetMapping(path = "/**", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> get(HttpServletRequest request, ProxyExchange<?> proxy) {
         var validationResult = validateUser(request, proxy);
@@ -36,6 +43,13 @@ public class ApiController {
         return proxy.uri(buildUri(request)).get();
     }
 
+    /**
+     * Proxy POST requests to the ticket service.
+     *
+     * @param request the request to be sent
+     * @param proxy the proxy component injected by spring
+     * @return response from the ticket service
+     */
     @PostMapping(value = "/**", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> post(HttpServletRequest request, ProxyExchange<?> proxy) {
         var validationResult = validateUser(request, proxy);

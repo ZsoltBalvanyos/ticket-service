@@ -26,12 +26,26 @@ public class UserValidationService {
     private final UserDeviceRepository userDeviceRepository;
     private final UserBankCardRepository userBankCardRepository;
 
+    /**
+     * Validates the user token and checks if the provided card id
+     * belongs to the user.
+     *
+     * @param token the user token
+     * @param cardId the card id of the user
+     * @return the user details extracted from the token
+     */
     public UserDetails validate(String token, long cardId) {
         var userDetails = validate(token);
         validateCard(userDetails.getUserId(), cardId);
         return userDetails.withCardId(cardId);
     }
 
+    /**
+     * Validates the user token.
+     *
+     * @param token the user token
+     * @return the user details extracted from the token
+     */
     public UserDetails validate(String token) {
 
         var parts = new String(Base64.getDecoder().decode(token)).split("&");

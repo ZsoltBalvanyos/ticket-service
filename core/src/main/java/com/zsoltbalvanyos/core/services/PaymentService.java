@@ -21,6 +21,19 @@ public class PaymentService {
     private final PartnerRepository partnerRepository;
     private final ReservedAmountRepository reservedAmountRepository;
 
+    /**
+     * Reserves the given amount for a transaction.
+     *
+     * If the transaction was successful, the {@link #complete(long, long)} method will finalize it.
+     *
+     * In case the transaction fails the {@link #revert(long, long, long)} method has to be
+     * invoked by the transaction's initiator.
+     *
+     * @param transactionId the id of the transaction
+     * @param userId the id of the debited user
+     * @param cardId the card id of the debited user
+     * @param amount the amount the user's balance has to be debited with
+     */
     @Transactional
     public void reserve(long transactionId, long userId, long cardId, BigDecimal amount) {
 
@@ -53,6 +66,12 @@ public class PaymentService {
         userBankCard.setAmount(userBankCard.getAmount().subtract(amount));
     }
 
+    /**
+     * Completes a transaction by deleting the reservation and crediting the partner
+     *
+     * @param transactionId the id of the transaction
+     * @param partnerId the id of the credited partner
+     */
     @Transactional
     public void complete(long transactionId, long partnerId) {
         var reservedAmount = reservedAmountRepository
@@ -68,6 +87,13 @@ public class PaymentService {
         partner.setAmount(partner.getAmount().add(reservedAmount.getAmount()));
     }
 
+    /**
+     * Reverts an initiated transaction by deleting the reservation record and crediting the user's balance
+     *
+     * @param transactionId the id fo the transaction
+     * @param userId the id of the user
+     * @param cardId the card id of the user
+     */
     @Transactional
     public void revert(long transactionId, long userId, long cardId) {
         var reservedAmount = reservedAmountRepository

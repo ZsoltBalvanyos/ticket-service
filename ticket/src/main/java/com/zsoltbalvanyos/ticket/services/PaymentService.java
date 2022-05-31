@@ -31,6 +31,25 @@ public class PaymentService {
     private final BookingRepository bookingRepository;
     private final BookingStatusRepository bookingStatusRepository;
 
+    /**
+     * Manages the transaction of a ticket purchase.
+     *
+     * Attempts to reserve the price of the ticket by debiting the users balance
+     * and inserting a reservation record.
+     * Calls the partner to reserve the ticket, if successful, completes the
+     * transaction by crediting the partner's balance and deleting the reservation
+     * record. If the partner could not reserve the ticket, the reservation record
+     * is deleted and the user's balance is credited with the price of the ticket.
+     *
+     *
+     * @param partnerClient partner's client api
+     * @param event the id of the event
+     * @param seat the id of the seat
+     * @param userId the id of the user
+     * @param partnerId the id of the partner
+     * @param cardId the cardId of the user
+     * @return the reservation id
+     */
     public long buyTicket(PartnerClient partnerClient, EventDetails event, EventSeat seat, long userId, long partnerId, long cardId) {
         var booking = bookingRepository.save(
             Booking.builder()
