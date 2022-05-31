@@ -10,7 +10,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Version;
 import java.math.BigDecimal;
-import java.time.Instant;
 
 @Entity
 @Data

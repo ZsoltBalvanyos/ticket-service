@@ -5,7 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
 import java.io.Serializable;
 
 @Entity
@@ -13,7 +17,7 @@ import java.io.Serializable;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@IdClass(BookingStatus.BookingStatusId.class)
+@IdClass(BookingStatus.class)
 public class BookingStatus implements Serializable {
 
     @Id
@@ -23,8 +27,4 @@ public class BookingStatus implements Serializable {
     @Enumerated(EnumType.STRING)
     private BookingState status;
 
-    public static class BookingStatusId implements Serializable {
-        private long bookingId;
-        private BookingState status;
-    }
 }

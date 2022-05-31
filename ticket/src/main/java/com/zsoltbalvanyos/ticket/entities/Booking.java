@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import java.util.Optional;
 
@@ -17,7 +18,9 @@ import java.util.Optional;
 public class Booking {
 
     @Id
+    @GeneratedValue
     private long bookingId;
+
     private long userId;
     private long cardId;
     private long eventId;

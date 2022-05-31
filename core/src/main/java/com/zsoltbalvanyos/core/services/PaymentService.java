@@ -1,16 +1,14 @@
 package com.zsoltbalvanyos.core.services;
 
 import com.zsoltbalvanyos.core.entities.ReservedAmount;
-import com.zsoltbalvanyos.core.exceptions.CardNotFoundException;
-import com.zsoltbalvanyos.core.exceptions.DuplicatedReservationException;
-import com.zsoltbalvanyos.core.exceptions.PartnerNotFoundException;
-import com.zsoltbalvanyos.core.exceptions.TransactionNotReservedException;
+import com.zsoltbalvanyos.core.exceptions.CoreException;
+import com.zsoltbalvanyos.core.exceptions.ErrorCode;
 import com.zsoltbalvanyos.core.repositories.PartnerRepository;
 import com.zsoltbalvanyos.core.repositories.ReservedAmountRepository;
 import com.zsoltbalvanyos.core.repositories.UserBankCardRepository;
+import com.zsoltbalvanyos.core.utils.PrefixBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
@@ -24,13 +22,25 @@ public class PaymentService {
     private final ReservedAmountRepository reservedAmountRepository;
 
     @Transactional
-    public void reserve(long transactionId, long cardId, BigDecimal amount) {
+    public void reserve(long transactionId, long userId, long cardId, BigDecimal amount) {
 
         if (reservedAmountRepository.existsById(transactionId)) {
-            throw new DuplicatedReservationException();
+            throw new CoreException(ErrorCode.DUPLICATED_RESERVATION);
         }
 
-        var prefixedCardId = prefixCardId(cardId);
+        var prefixedCardId = PrefixBuilder.prefixCardId(cardId);
+
+        var userBankCard = userBankCardRepository
+            .findAndLockByCardId(prefixedCardId)
+            .orElseThrow(() -> new CoreException(ErrorCode.CARD_NOT_FOUND));
+
+        if (userBankCard.getUserId() != userId) {
+            throw new CoreException(ErrorCode.USER_ID_CARD_ID_MISMATCH);
+        }
+
+        if (userBankCard.getAmount().compareTo(amount) < 0) {
+            throw new CoreException(ErrorCode.INSUFFICIENT_FUNDS);
+        }
 
         reservedAmountRepository.save(
             ReservedAmount.builder()
@@ -40,10 +50,6 @@ public class PaymentService {
                 .build()
         );
 
-        var userBankCard = userBankCardRepository
-            .findAndLockByCardId(prefixedCardId)
-            .orElseThrow(CardNotFoundException::new);
-
         userBankCard.setAmount(userBankCard.getAmount().subtract(amount));
     }
 
@@ -51,34 +57,34 @@ public class PaymentService {
     public void complete(long transactionId, long partnerId) {
         var reservedAmount = reservedAmountRepository
             .findAndLockByTransactionId(transactionId)
-            .orElseThrow(TransactionNotReservedException::new);
+            .orElseThrow(() -> new CoreException(ErrorCode.TRANSACTION_NOT_RESERVED));
 
         reservedAmountRepository.deleteById(transactionId);
 
         var partner = partnerRepository
             .findAndLockByPartnerId(partnerId)
-            .orElseThrow(PartnerNotFoundException::new);
+            .orElseThrow(() -> new CoreException(ErrorCode.PARTNER_NOT_FOUND));
 
         partner.setAmount(partner.getAmount().add(reservedAmount.getAmount()));
     }
 
     @Transactional
-    public void revert(long transactionId, long cardId) {
+    public void revert(long transactionId, long userId, long cardId) {
         var reservedAmount = reservedAmountRepository
             .findAndLockByTransactionId(transactionId)
-            .orElseThrow(TransactionNotReservedException::new);
+            .orElseThrow(() -> new CoreException(ErrorCode.TRANSACTION_NOT_RESERVED));
 
         reservedAmountRepository.deleteById(transactionId);
 
         var userBankCard = userBankCardRepository
-            .findAndLockByCardId(prefixCardId(cardId))
-            .orElseThrow(CardNotFoundException::new);
+            .findAndLockByCardId(PrefixBuilder.prefixCardId(cardId))
+            .orElseThrow(() -> new CoreException(ErrorCode.CARD_NOT_FOUND));
+
+        if (userBankCard.getUserId() != userId) {
+            throw new CoreException(ErrorCode.USER_ID_CARD_ID_MISMATCH);
+        }
 
         userBankCard.setAmount(userBankCard.getAmount().add(reservedAmount.getAmount()));
-    }
-
-    private String prefixCardId(long cardId) {
-        return "C000" + cardId;
     }
 
 }

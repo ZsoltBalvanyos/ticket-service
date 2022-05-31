@@ -25,3 +25,6 @@ image-partner:
 build-all: build-api build-ticket build-core build-partner
 image-all: image-api image-ticket image-core image-partner
 
+run-dbs:
+	docker-compose up postgres-core postgres-ticket postgres-partner
+

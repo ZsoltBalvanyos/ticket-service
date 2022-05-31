@@ -16,9 +16,21 @@ spring:
     init:
       mode: always
 
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+
+logging:
+  level:
+    com.zsoltbalvanyos: DEBUG
+    org.springframework.web.client.RestTemplate: DEBUG
+
 core:
   endpoint: "http://${CORE_HOST:localhost}:9992"
 
 partners:
   best-tickets:
+    endpoint: "http://${PARTNER_HOST:localhost}:9994"
+  fun-tickets:
     endpoint: "http://${PARTNER_HOST:localhost}:9994"

@@ -3,13 +3,14 @@ package com.zsoltbalvanyos.ticket.services;
 import com.zsoltbalvanyos.ticket.PartnerClient;
 import com.zsoltbalvanyos.ticket.dtos.EventDetails;
 import com.zsoltbalvanyos.ticket.dtos.EventSummary;
-import com.zsoltbalvanyos.ticket.exceptions.EventNotFoundException;
-import com.zsoltbalvanyos.ticket.exceptions.PartnerNotFoundException;
+import com.zsoltbalvanyos.ticket.exceptions.ErrorCode;
+import com.zsoltbalvanyos.ticket.exceptions.TicketException;
 import com.zsoltbalvanyos.ticket.repositories.PartnerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,9 +45,9 @@ public class TicketService {
                 partnerClients.get(
                     partnerRepository
                         .getPartnerOfEvent(eventId)
-                        .orElseThrow(EventNotFoundException::new)
+                        .orElseThrow(() -> new TicketException(ErrorCode.EVENT_NOT_FOUND))
                         .getName()))
-            .orElseThrow(PartnerNotFoundException::new)
+            .orElseThrow(() -> new TicketException(ErrorCode.PARTNER_NOT_FOUND))
             .getEvent(eventId);
     }
 
@@ -54,15 +55,43 @@ public class TicketService {
 
         var partner = partnerRepository
             .getPartnerOfEvent(eventId)
-            .orElseThrow(EventNotFoundException::new);
+            .orElseThrow(() -> new TicketException(ErrorCode.EVENT_NOT_FOUND));
 
-        var event = getEvent(eventId).orElseThrow(EventNotFoundException::new);
-        var partnerClient = Optional.ofNullable(partnerClients.get(partner.getName())).orElseThrow(PartnerNotFoundException::new);
+        var allEventsOfPartner = Optional.ofNullable(partnerClients.get(partner.getName()))
+            .map(PartnerClient::getEvents)
+            .orElseThrow(() -> new TicketException(ErrorCode.PARTNER_NOT_FOUND));
+
+        var eventStartTimestamp = Optional.ofNullable(
+            allEventsOfPartner
+                .stream()
+                .collect(Collectors.toMap(EventSummary::eventId, EventSummary::startTimestamp))
+                .get(eventId))
+            .orElseThrow(() -> new TicketException(ErrorCode.EVENT_NOT_FOUND));
+
+        if (Instant.ofEpochMilli(eventStartTimestamp).isBefore(Instant.now())) {
+            throw new TicketException(ErrorCode.EVENT_IN_PAST);
+        }
+
+        var eventDetails = getEvent(eventId)
+            .orElseThrow(() -> new TicketException(ErrorCode.EVENT_NOT_FOUND));
+
+        var seat = eventDetails.seats().stream()
+            .filter(s -> s.seatId() == seatId)
+            .findFirst()
+            .orElseThrow(() -> new TicketException(ErrorCode.SEAT_NOT_FOUND));
+
+        if (seat.reserved()) {
+            throw new TicketException(ErrorCode.SEAT_RESERVED);
+        }
+
+        var partnerClient = Optional
+            .ofNullable(partnerClients.get(partner.getName()))
+            .orElseThrow(() -> new TicketException(ErrorCode.PARTNER_NOT_FOUND));
 
         return paymentService.buyTicket(
             partnerClient,
-            event,
-            seatId,
+            eventDetails,
+            seat,
             userId,
             partner.getPartnerId(),
             cardId);

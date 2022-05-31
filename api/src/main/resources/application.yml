@@ -6,3 +6,11 @@ core:
 
 ticket:
   endpoint: "http://${TICKET_HOST:localhost}:9993"
+
+spring:
+  cache:
+    type: none
+
+logging:
+  level:
+    com.zsoltbalvanyos: DEBUG

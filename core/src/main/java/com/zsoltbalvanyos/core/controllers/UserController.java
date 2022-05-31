@@ -1,11 +1,16 @@
 package com.zsoltbalvanyos.core.controllers;
 
+import com.zsoltbalvanyos.core.exceptions.CoreException;
+import com.zsoltbalvanyos.core.exceptions.ErrorCode;
 import com.zsoltbalvanyos.core.services.UserValidationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/user")
@@ -16,8 +21,17 @@ public class UserController {
 
     @GetMapping("/validate")
     public void validate(
-        @RequestParam("token") String token
-    ) {
-        userValidationService.validate(token);
+        @RequestHeader("User-Token") Optional<String> token,
+        @RequestParam("cardId") Optional<Long> cardId
+        ) {
+        if (token.isEmpty()) {
+            throw new CoreException(ErrorCode.TOKEN_NOT_FOUND);
+        }
+
+        if (cardId.isPresent()) {
+            userValidationService.validate(token.get(), cardId.get());
+        } else {
+            userValidationService.validate(token.get());
+        }
     }
 }

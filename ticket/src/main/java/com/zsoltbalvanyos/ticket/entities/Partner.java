@@ -19,5 +19,4 @@ public class Partner {
     private long partnerId;
 
     private String name;
-    private String url;
 }

@@ -9,19 +9,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @WebMvcTest
-@WireMockTest(httpPort = 9993)
+@WireMockTest(httpPort = 9992)
 @Disabled
 class ApiControllerTest {
 
     @Autowired
     private MockMvc mvc;
+
+    @Test
+    void validateUser() throws Exception {
+        stubFor(WireMock.get("/user/validate").willReturn(aResponse().withStatus(500).withBody("{errorCode: 500}")));
+        mvc.perform(get("/getEvents"))
+            .andExpect(content().string(containsString("{errorCode: 500}")));
+    }
 
     @Test
     void getEvents() throws Exception {

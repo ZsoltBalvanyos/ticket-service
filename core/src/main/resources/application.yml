@@ -15,3 +15,11 @@ spring:
   sql:
     init:
       mode: always
+
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+logging:
+  level:
+    com.zsoltbalvanyos: DEBUG

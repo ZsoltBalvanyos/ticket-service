@@ -1,12 +1,14 @@
 package com.zsoltbalvanyos.ticket.services;
 
 import com.zsoltbalvanyos.ticket.CoreClient;
+import com.zsoltbalvanyos.ticket.dtos.TransactionDetails;
 import com.zsoltbalvanyos.ticket.entities.BookingState;
+import com.zsoltbalvanyos.ticket.exceptions.AmountReservationException;
 import com.zsoltbalvanyos.ticket.exceptions.PaymentException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
@@ -24,18 +26,18 @@ public class CoreClientImpl implements CoreClient {
     }
 
     @Override
-    public void reserveAmount(long transactionId, long cardId, BigDecimal amount) {
+    public void reserveAmount(long transactionId, long userId, long cardId, BigDecimal amount) {
         var url = String.format(
-            "%s/reserve?transactionId=%d&cardId=%d&amount=%s",
+            "%s/reserve?transactionId=%d&userId=%d&cardId=%d",
             endpoint,
             transactionId,
-            cardId,
-            amount.toString());
+            userId,
+            cardId);
 
-        var response = restTemplate.postForEntity(url, Void.class, Void.class);
-
-        if (response.getStatusCode().equals(HttpStatus.BAD_REQUEST)) {
-            throw new PaymentException(transactionId, BookingState.AMOUNT_RESERVATION_FAILED);
+        try {
+            restTemplate.postForEntity(url, new TransactionDetails(amount), Void.class);
+        } catch (RestClientResponseException e){
+            throw new AmountReservationException(transactionId, BookingState.AMOUNT_RESERVATION_FAILED);
         }
     }
 
@@ -47,24 +49,25 @@ public class CoreClientImpl implements CoreClient {
             transactionId,
             partnerId);
 
-        var response = restTemplate.postForEntity(url, Void.class, Void.class);
-
-        if (response.getStatusCode().equals(HttpStatus.BAD_REQUEST)) {
+        try {
+            restTemplate.postForEntity(url, Void.class, Void.class);
+        } catch (RestClientResponseException e) {
             throw new PaymentException(transactionId, BookingState.PAYMENT_COMPLETION_FAILED);
         }
     }
 
     @Override
-    public void revertTransaction(long transactionId, long cardId) {
+    public void revertTransaction(long transactionId, long userId, long cardId) {
         var url = String.format(
-            "%s/revert?transactionId=%d&cardId=%d",
+            "%s/revert?transactionId=%d&userId=%d&cardId=%d",
             endpoint,
             transactionId,
+            userId,
             cardId);
 
-        var response = restTemplate.postForEntity(url, Void.class, Void.class);
-
-        if (response.getStatusCode().equals(HttpStatus.BAD_REQUEST)) {
+        try {
+            restTemplate.postForEntity(url, Void.class, Void.class);
+        } catch (RestClientResponseException e) {
             throw new PaymentException(transactionId, BookingState.SEAT_BOOKING_FAILED);
         }
     }

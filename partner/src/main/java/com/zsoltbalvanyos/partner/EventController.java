@@ -1,7 +1,8 @@
 package com.zsoltbalvanyos.partner;
 
-import com.zsoltbalvanyos.partner.dtos.EventSummary;
 import com.zsoltbalvanyos.partner.dtos.EventDetails;
+import com.zsoltbalvanyos.partner.dtos.EventSummary;
+import com.zsoltbalvanyos.partner.dtos.ResponseWrapper;
 import com.zsoltbalvanyos.partner.services.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,21 +19,22 @@ public class EventController {
     private final EventService eventService;
 
     @GetMapping("/getEvents")
-    public List<EventSummary> getEvents() {
-        return eventService.getEvents();
+    public ResponseWrapper<List<EventSummary>> getEvents() {
+        return new ResponseWrapper<>(eventService.getEvents(), true);
     }
 
     @GetMapping("/getEvent")
-    public EventDetails getEvent(@RequestParam("eventId") long eventId) {
-        return eventService.getEvent(eventId);
+    public ResponseWrapper<EventDetails> getEvent(@RequestParam("eventId") long eventId) {
+//        throw new RuntimeException("booom");
+        return new ResponseWrapper<>(eventService.getEvent(eventId), true);
     }
 
     @PostMapping("/reserve")
-    public Long reserve(
+    public ResponseWrapper<Long> reserve(
         @RequestParam("eventId") long eventId,
         @RequestParam("seatId") long seatId
     ) {
-        return eventService.reserve(eventId, seatId);
+        return new ResponseWrapper<>(eventService.reserve(eventId, seatId), true);
     }
 
 }

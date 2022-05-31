@@ -14,4 +14,9 @@ public class PaymentException extends RuntimeException {
         this.bookingId = bookingId;
         this.bookingState = bookingState;
     }
+
+    @Override
+    public String toString() {
+        return String.format("booking [%d]: %s", bookingId, bookingState);
+    }
 }

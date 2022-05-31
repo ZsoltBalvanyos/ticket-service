@@ -1,35 +1,43 @@
 package com.zsoltbalvanyos.core.services;
 
+import com.zsoltbalvanyos.core.dtos.UserDetails;
 import com.zsoltbalvanyos.core.entities.UserDevice;
 import com.zsoltbalvanyos.core.entities.UserToken;
-import com.zsoltbalvanyos.core.exceptions.InvalidUserTokenException;
-import com.zsoltbalvanyos.core.exceptions.UserException;
+import com.zsoltbalvanyos.core.exceptions.CoreException;
+import com.zsoltbalvanyos.core.exceptions.ErrorCode;
+import com.zsoltbalvanyos.core.repositories.UserBankCardRepository;
 import com.zsoltbalvanyos.core.repositories.UserDeviceRepository;
 import com.zsoltbalvanyos.core.repositories.UserRepository;
 import com.zsoltbalvanyos.core.repositories.UserTokenRepository;
+import com.zsoltbalvanyos.core.utils.PrefixBuilder;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Base64;
 
-import static com.zsoltbalvanyos.core.exceptions.UserException.Error.USER_ID_NOT_FOUND;
-import static com.zsoltbalvanyos.core.exceptions.UserException.Error.USER_ID_EMAIL_ADDRESS_MISMATCH;
-import static com.zsoltbalvanyos.core.exceptions.UserException.Error.UNREGISTERED_DEVICE;
-
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class UserValidationService {
 
     private final UserRepository userRepository;
     private final UserTokenRepository userTokenRepository;
     private final UserDeviceRepository userDeviceRepository;
+    private final UserBankCardRepository userBankCardRepository;
 
-    public void validate(String token) {
+    public UserDetails validate(String token, long cardId) {
+        var userDetails = validate(token);
+        validateCard(userDetails.getUserId(), cardId);
+        return userDetails.withCardId(cardId);
+    }
+
+    public UserDetails validate(String token) {
 
         var parts = new String(Base64.getDecoder().decode(token)).split("&");
 
         if (parts.length != 3) {
-            throw new InvalidUserTokenException();
+            throw new CoreException(ErrorCode.INVALID_TOKEN);
         }
 
         try {
@@ -40,17 +48,23 @@ public class UserValidationService {
             validateUser(userId, email);
             validateToken(userId, token);
             validateDevice(userId, deviceHash);
+
+            return UserDetails.builder()
+                .userId(userId)
+                .email(email)
+                .deviceHash(deviceHash)
+                .build();
         } catch (NumberFormatException e) {
-            throw new InvalidUserTokenException();
+            throw new CoreException(ErrorCode.INVALID_TOKEN);
         }
     }
 
     private void validateUser(long userId, String email) {
         var user = userRepository.findById(userId)
-            .orElseThrow(() -> new UserException(USER_ID_NOT_FOUND));
+            .orElseThrow(() -> new CoreException(ErrorCode.USER_NOT_FOUND));
 
-        if (user.getEmail().equalsIgnoreCase(email)) {
-            throw new UserException(USER_ID_EMAIL_ADDRESS_MISMATCH);
+        if (!user.getEmail().equalsIgnoreCase(email)) {
+            throw new CoreException(ErrorCode.USER_ID_EMAIL_MISMATCH);
         }
     }
 
@@ -61,7 +75,7 @@ public class UserValidationService {
             .build();
 
         if (!userTokenRepository.existsById(userToken)) {
-            throw new InvalidUserTokenException();
+            throw new CoreException(ErrorCode.INVALID_TOKEN);
         }
     }
 
@@ -72,7 +86,16 @@ public class UserValidationService {
             .build();
 
         if (!userDeviceRepository.existsById(userDevice)) {
-            throw new UserException(UNREGISTERED_DEVICE);
+            throw new CoreException(ErrorCode.UNREGISTERED_DEVICE);
+        }
+    }
+
+    private void validateCard(long userId, long cardId) {
+        var userBankCard = userBankCardRepository.findById(PrefixBuilder.prefixCardId(cardId))
+            .orElseThrow(() -> new CoreException(ErrorCode.CARD_NOT_FOUND));
+
+        if (userBankCard.getUserId() != userId) {
+            throw new CoreException(ErrorCode.USER_ID_CARD_ID_MISMATCH);
         }
     }
 }

@@ -12,6 +12,6 @@ public interface PartnerClient {
 
     Optional<EventDetails> getEvent(long eventId);
 
-    long reserveSeat(long eventId, long seatId);
+    Optional<Long> reserveSeat(long eventId, long seatId);
 
 }
