@@ -28,3 +28,6 @@ image-all: image-api image-ticket image-core image-partner
 run-dbs:
 	docker-compose up postgres-core postgres-ticket postgres-partner
 
+run:
+	make build-all image-all && docker-compose up
+
