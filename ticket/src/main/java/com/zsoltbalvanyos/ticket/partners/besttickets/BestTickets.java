@@ -11,7 +11,7 @@ import com.zsoltbalvanyos.ticket.partners.besttickets.dtos.BestTicketSeats;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
+import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -24,17 +24,22 @@ import java.util.Optional;
 public class BestTickets implements PartnerClient {
 
     private final String endpoint;
+    private final String apiKey;
     private final EventDetailsMapper eventDetailsMapper;
     private final EventSummaryMapper eventSummaryMapper;
     private final RestTemplate restTemplate;
 
+    private final static String API_KEY_HEADER = "X-API-Key";
+
     public BestTickets(
         @Value("${partners.best-tickets.endpoint}") String endpoint,
+        @Value("${partners.best-tickets.api-key}") String apiKey,
         EventDetailsMapper eventDetailsMapper,
         EventSummaryMapper eventSummaryMapper,
         RestTemplate restTemplate
     ) {
         this.endpoint = endpoint;
+        this.apiKey = apiKey;
         this.eventDetailsMapper = eventDetailsMapper;
         this.eventSummaryMapper = eventSummaryMapper;
         this.restTemplate = restTemplate;
@@ -43,10 +48,12 @@ public class BestTickets implements PartnerClient {
     @Override
     public List<EventSummary> getEvents() {
         var response = restTemplate.exchange(
-            String.format("%s/getEvents", endpoint),
-            HttpMethod.GET,
-            null,
-            new ParameterizedTypeReference<ResponseWrapper<BestTicketEvent[]>>(){});
+            RequestEntity
+                .get(String.format("%s/getEvents", endpoint))
+                .header(API_KEY_HEADER, apiKey)
+                .build(),
+            new ParameterizedTypeReference<ResponseWrapper<BestTicketEvent[]>>(){}
+        );
 
         if (response.getBody() == null) {
             return List.of();
@@ -60,10 +67,12 @@ public class BestTickets implements PartnerClient {
     @Override
     public Optional<EventDetails> getEvent(long eventId) {
         var response = restTemplate.exchange(
-            String.format("%s/getEvent?eventId=%d", endpoint, eventId),
-            HttpMethod.GET,
-            null,
-            new ParameterizedTypeReference<ResponseWrapper<BestTicketSeats>>(){});
+            RequestEntity
+                .get(String.format("%s/getEvent?eventId=%d", endpoint, eventId))
+                .header(API_KEY_HEADER, apiKey)
+                .build(),
+            new ParameterizedTypeReference<ResponseWrapper<BestTicketSeats>>(){}
+        );
 
         return Optional.ofNullable(response.getBody())
             .map(ResponseWrapper::data)
@@ -72,15 +81,19 @@ public class BestTickets implements PartnerClient {
 
     @Override
     public Optional<Long> reserveSeat(long eventId, long seatId) {
+        var uri = String.format(
+            "%s/reserve?eventId=%d&seatId=%d",
+            endpoint,
+            eventId,
+            seatId);
+
         var response = restTemplate.exchange(
-            String.format(
-                "%s/reserve?eventId=%d&seatId=%d",
-                endpoint,
-                eventId,
-                seatId),
-            HttpMethod.POST,
-            null,
-            new ParameterizedTypeReference<ResponseWrapper<Long>>(){});
+            RequestEntity
+                .post(uri)
+                .header(API_KEY_HEADER, apiKey)
+                .build(),
+            new ParameterizedTypeReference<ResponseWrapper<Long>>(){}
+        );
 
         return Optional.ofNullable(response.getBody())
             .map(ResponseWrapper::data);

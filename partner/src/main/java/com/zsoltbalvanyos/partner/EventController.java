@@ -25,7 +25,6 @@ public class EventController {
 
     @GetMapping("/getEvent")
     public ResponseWrapper<EventDetails> getEvent(@RequestParam("eventId") long eventId) {
-//        throw new RuntimeException("booom");
         return new ResponseWrapper<>(eventService.getEvent(eventId), true);
     }
 
